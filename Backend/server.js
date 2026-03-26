@@ -2,11 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
+// FRONTEND
+app.use(express.static('frontend'));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+// DB
 mongoose.connect(process.env.MONGO_URI)
   .then(()=>console.log("MongoDB connecté"))
   .catch(err=>console.error(err));
@@ -19,37 +29,25 @@ const gridSchema = new mongoose.Schema({
 
 const Grid = mongoose.model("Grid", gridSchema);
 
-/*app.get('/grids/:id', async (req,res)=>{
-  try{
-    const grid = await Grid.findOne({gridId: req.params.id});
-    if(!grid) return res.status(404).json({error:"Grille introuvable"});
-    res.json({
-      gridData: grid.gridData,
-      clues: grid.clues
-    });
-  }catch(err){
-    console.error(err);
-    res.status(500).json({error:"Erreur serveur"});
-  }
-});*/
-
+// API
 app.get('/grids/:id', async (req,res)=>{
   try{
     const grid = await Grid.findOne({gridId: req.params.id});
 
-    console.log("GRID récupérée :", grid); // 👈 ici
-    console.log("gridData :", grid.gridData);
-    console.log("clues :", grid.clues);
-
     res.json({
       gridData: grid.gridData,
       clues: grid.clues
     });
+
   }catch(err){
     console.error(err);
     res.status(500).json({error:"Erreur serveur"});
   }
 });
 
-app.listen(3000, ()=>console.log("Serveur lancé sur http://localhost:3000"));
+// PORT RENDER
+const PORT = process.env.PORT || 3000;
 
+app.listen(PORT, () => {
+  console.log("Serveur lancé sur le port", PORT);
+});
